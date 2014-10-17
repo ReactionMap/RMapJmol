@@ -1,6 +1,8 @@
+package net.sourceforge.rmapviewer.rmapjmol;
 /**
  * Created by tomohiro on 14/10/17.
  */
+
 import java.io.*;
 import java.awt.*;
 import java.awt.event.*;
@@ -16,12 +18,57 @@ public class RMapJmol extends JPanel implements ComponentListener, ActionListene
     private Dimension cachedSize = new Dimension(500, 500);
     private Rectangle rectClip = new Rectangle();
     private Timer timer;
-    private int frame = 0;
+    private int frame = 1;
     private int number_of_frames = 1;
+    private JButton rewindButton = new JButton("|←");
+    private JButton prevStructureButton = new JButton("");
+    private JButton playPauseButton = new JButton("▶︎");
+    private JButton nextStructureButton = new JButton("");
+    private JButton forwardButton = new JButton("→|");
 
     public void actionPerformed(ActionEvent event) {
-        frame = frame % number_of_frames + 1;
+        Object source = event.getSource();
+        if (source == timer) {
+            tick();
+        } else if (source == playPauseButton) {
+            if (timer.isRunning()) {
+                pause();
+            } else {
+                play();
+            }
+        } else if (source == rewindButton) {
+            rewind();
+        } else if (source == forwardButton) {
+            forward();
+        }
+    }
+    public void rewind() {
+        setFrame(1);
+        pause();
+    }
+    public void forward() {
+        setFrame(number_of_frames);
+        pause();
+    }
+    public void play() {
+        timer.start();
+        playPauseButton.setText("‖");
+    }
+    public void pause() {
+        timer.stop();
+        playPauseButton.setText("▶︎");
+    }
+    private void setFrame(int frame) {
+        this.frame = frame;
         script("frame "+frame+"\n");
+    }
+    private void tick() {
+        if (frame < number_of_frames) {
+            frame = frame + 1;
+            setFrame(frame);
+        } else {
+            pause();
+        }
     }
     public void componentHidden(ComponentEvent event) {
         System.exit(0);
@@ -41,7 +88,6 @@ public class RMapJmol extends JPanel implements ComponentListener, ActionListene
     }
 
     public void script(String command) {
-        System.out.println(command);
         viewer.evalString(command);
     }
 
@@ -59,14 +105,27 @@ public class RMapJmol extends JPanel implements ComponentListener, ActionListene
         this.addComponentListener(this);
         JFrame frame = new JFrame(label);
         frame.setDefaultCloseOperation(WindowConstants.EXIT_ON_CLOSE);
-        frame.setSize(this.cachedSize);
-        frame.add(this);
+        frame.setSize(500, 530);
+        frame.getContentPane().add(this, BorderLayout.CENTER);
+        JPanel buttonsPanel = new JPanel();
+        frame.getContentPane().add(buttonsPanel, BorderLayout.SOUTH);
+        buttonsPanel.setLayout(new GridLayout(1, 5));
+        buttonsPanel.setSize(500, 30);
+        buttonsPanel.add(rewindButton);
+        buttonsPanel.add(prevStructureButton);
+        buttonsPanel.add(playPauseButton);
+        buttonsPanel.add(nextStructureButton);
+        buttonsPanel.add(forwardButton);
+        rewindButton.addActionListener(this);
+        prevStructureButton.addActionListener(this);
+        playPauseButton.addActionListener(this);
+        nextStructureButton.addActionListener(this);
+        forwardButton.addActionListener(this);
         frame.setVisible(true);
         this.viewer.openStringInline(xyz);
         number_of_frames = viewer.getModelCount();
         System.out.println("number of frames: "+number_of_frames);
         timer = new Timer(100, this);
-        timer.start();
     }
 
     public RMapJmol(String label, File xyzFile) throws IOException {
