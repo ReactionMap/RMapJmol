@@ -15,19 +15,23 @@ import org.jmol.adapter.smarter.SmarterJmolAdapter;
 
 
 public class RMapJmol extends JPanel implements ComponentListener, ActionListener {
+    private JFrame frame;
     private JmolViewer viewer;
     private String[] captions;
     private Font captionFont = new Font("Arial", Font.BOLD, 36);
     private Dimension cachedSize = new Dimension(500, 500);
     private Rectangle rectClip = new Rectangle();
     private Timer timer;
-    private int frame = 1;
+    private int frame_index = 1;
     private int number_of_frames = 1;
-    private JButton rewindButton = new JButton("|←");
+    private PathShuttlePanel shuttlePanel = new PathShuttlePanel(this);
+    private Icon playIcon = new ImageIcon(getClass().getResource("/images/play.png"));
+    private Icon pauseIcon = new ImageIcon(getClass().getResource("/images/pause.png"));
+    private JButton rewindButton = new JButton(new ImageIcon(getClass().getResource("/images/rewind.png")));
     private JButton prevStructureButton = new JButton("");
-    private JButton playPauseButton = new JButton("▶︎");
+    private JButton playPauseButton = new JButton(playIcon);
     private JButton nextStructureButton = new JButton("");
-    private JButton forwardButton = new JButton("→|");
+    private JButton forwardButton = new JButton(new ImageIcon(getClass().getResource("/images/fastforward.png")));
     private int pauseCounter = 0;
     private int pauseDeciseconds = 10;
 
@@ -79,22 +83,36 @@ public class RMapJmol extends JPanel implements ComponentListener, ActionListene
     }
     public void play() {
         timer.start();
-        playPauseButton.setText("‖");
+        playPauseButton.setIcon(pauseIcon);
     }
     public void pause() {
         timer.stop();
-        playPauseButton.setText("▶︎");
+        playPauseButton.setIcon(playIcon);
     }
-    private void setFrame(int frame) {
-        this.frame = frame;
+    public int getFrame() {
+        return frame_index;
+    }
+    public void setFrame(int frame) {
+        this.frame_index = frame;
         script("frame "+frame);
         setStructureButtons();
+        shuttlePanel.repaint();
+    }
+    public String getCaption(int frame) {
+        if (frame > 0 && frame <= captions.length) {
+            return captions[frame-1];
+        } else {
+            return "";
+        }
+    }
+    public String getCaption() {
+        return getCaption(frame_index);
     }
     private void nextFrame() {
-        if (frame < number_of_frames) {
-            frame = frame + 1;
-            setFrame(frame);
-            if (frame >= 1 && frame <= captions.length && captions[frame-1].length() > 0) {
+        if (frame_index < number_of_frames) {
+            frame_index = frame_index + 1;
+            setFrame(frame_index);
+            if (getCaption().length() > 0) {
                 pauseCounter = pauseDeciseconds;
             }
         } else {
@@ -104,20 +122,11 @@ public class RMapJmol extends JPanel implements ComponentListener, ActionListene
 
     private void setStructureButtons() {
         int prevCaptionFrame = prevCaptionFrame() - 1;
-        if (prevCaptionFrame >= 0 && prevCaptionFrame < captions.length) {
-            prevStructureButton.setText(captions[prevCaptionFrame]);
-        } else {
-            prevStructureButton.setText("");
-        }
-        int nextCaptionFrame = nextCaptionFrame() - 1;
-        if (nextCaptionFrame >= 0 && nextCaptionFrame < captions.length) {
-            nextStructureButton.setText(captions[nextCaptionFrame]);
-        } else {
-            nextStructureButton.setText("");
-        }
+        prevStructureButton.setText(getCaption(prevCaptionFrame()));
+        nextStructureButton.setText(getCaption(nextCaptionFrame()));
     }
 
-    private int nextCaptionFrame() {
+    public int nextCaptionFrame(int frame) {
         int nextCaptionFrame = frame + 1;
         while (nextCaptionFrame > 0 && nextCaptionFrame <= captions.length && captions[nextCaptionFrame-1].length() == 0) {
             ++nextCaptionFrame;
@@ -129,7 +138,11 @@ public class RMapJmol extends JPanel implements ComponentListener, ActionListene
         }
     }
 
-    private int prevCaptionFrame() {
+    public int nextCaptionFrame() {
+        return nextCaptionFrame(frame_index);
+    }
+
+    public int prevCaptionFrame(int frame) {
         int prevCaptionFrame = frame - 1;
         while (prevCaptionFrame > 0 && prevCaptionFrame <= captions.length && captions[prevCaptionFrame-1].length() == 0) {
             --prevCaptionFrame;
@@ -141,9 +154,15 @@ public class RMapJmol extends JPanel implements ComponentListener, ActionListene
         }
     }
 
-    public void componentHidden(ComponentEvent event) {
-        System.exit(0);
+    public int prevCaptionFrame() {
+        return prevCaptionFrame(frame_index);
     }
+
+    public String[] getCaptions() {
+        return captions;
+    }
+
+    public void componentHidden(ComponentEvent event) {}
     public void componentMoved(ComponentEvent event) {}
     public void componentResized(ComponentEvent event) {
         this.updateSize();
@@ -166,11 +185,18 @@ public class RMapJmol extends JPanel implements ComponentListener, ActionListene
     public void paint(Graphics graphics) {
         graphics.getClipBounds(rectClip);
         viewer.renderScreenImage(graphics, cachedSize, rectClip);
-        if (frame >= 1 && frame <= captions.length) {
+        if (frame_index >= 1 && frame_index <= captions.length) {
             graphics.setColor(Color.WHITE);
             graphics.setFont(captionFont);
-            graphics.drawString(captions[frame-1], 0,400);
+            String caption = getCaption();
+            FontMetrics fontMetrics = graphics.getFontMetrics();
+            int width = fontMetrics.stringWidth(caption);
+            graphics.drawString(caption, (this.getWidth() - width) / 2, this.getHeight() - 5);
         }
+    }
+
+    public void setExitOnClose(boolean exitOnClose) {
+        frame.setDefaultCloseOperation(WindowConstants.EXIT_ON_CLOSE);
     }
 
     public RMapJmol(String label, String xyz, String[] cap) {
@@ -180,12 +206,15 @@ public class RMapJmol extends JPanel implements ComponentListener, ActionListene
         viewer.setScreenDimension(new Dimension(500, 500));
         viewer.setColorBackground("black");
         this.addComponentListener(this);
-        JFrame frame = new JFrame(label);
-        frame.setDefaultCloseOperation(WindowConstants.EXIT_ON_CLOSE);
-        frame.setSize(500, 530);
+        frame = new JFrame(label);
+        frame.setBounds(0, 0, 500, 570);
         frame.getContentPane().add(this, BorderLayout.CENTER);
+        JPanel navigationPanel = new JPanel();
+        navigationPanel.setLayout(new BorderLayout());
+        navigationPanel.setSize(500, 70);
+        frame.getContentPane().add(navigationPanel, BorderLayout.SOUTH);
         JPanel buttonsPanel = new JPanel();
-        frame.getContentPane().add(buttonsPanel, BorderLayout.SOUTH);
+        navigationPanel.add(buttonsPanel, BorderLayout.NORTH);
         buttonsPanel.setLayout(new GridLayout(1, 5));
         buttonsPanel.setSize(500, 30);
         buttonsPanel.add(rewindButton);
@@ -198,11 +227,14 @@ public class RMapJmol extends JPanel implements ComponentListener, ActionListene
         playPauseButton.addActionListener(this);
         nextStructureButton.addActionListener(this);
         forwardButton.addActionListener(this);
-        frame.setVisible(true);
+        navigationPanel.add(shuttlePanel, BorderLayout.SOUTH);
+        shuttlePanel.setPreferredSize(new Dimension(500, 30));
+
         this.viewer.openStringInline(xyz);
         number_of_frames = viewer.getModelCount();
         System.out.println("number of frames: "+number_of_frames);
         timer = new Timer(100, this);
+        frame.setVisible(true);
         setFrame(1);
     }
 
@@ -214,7 +246,16 @@ public class RMapJmol extends JPanel implements ComponentListener, ActionListene
         String label = args[0];
         String xyzFilename = args[1];
         String capFilename = args[2];
-        new RMapJmol(label, new File(xyzFilename), new File(capFilename));
+        RMapJmol jmol = new RMapJmol(label, new File(xyzFilename), new File(capFilename));
+        jmol.setExitOnClose(true);
+        if (args.length > 3) {
+            String energyFilename = args[3];
+            JFrame energyFrame = new JFrame(label+" energy");
+            energyFrame.setBounds(500, 0, 1100, 570);
+            energyFrame.getContentPane().add(new EnergyTreeView(jmol, new File(energyFilename)));
+            energyFrame.setVisible(true);
+            System.out.println("launched");
+        }
     }
 
     private static String readFile(File file) throws IOException {
