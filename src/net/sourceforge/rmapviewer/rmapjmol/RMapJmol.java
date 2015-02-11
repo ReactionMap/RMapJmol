@@ -252,7 +252,12 @@ public class RMapJmol extends JPanel implements ComponentListener, ActionListene
             String energyFilename = args[3];
             JFrame energyFrame = new JFrame(label+" energy");
             energyFrame.setBounds(500, 0, 1100, 570);
-            energyFrame.getContentPane().add(new EnergyTreeView(jmol, new File(energyFilename)));
+            JPanel panel = new JPanel();
+            energyFrame.getContentPane().add(panel);
+            panel.setLayout(new BorderLayout());
+            EnergyTreeView treeView = new EnergyTreeView(jmol, new File(energyFilename));
+            panel.add(treeView.createEnergyTable(), BorderLayout.WEST);
+            panel.add(treeView, BorderLayout.CENTER);
             energyFrame.setVisible(true);
             System.out.println("launched");
         }
