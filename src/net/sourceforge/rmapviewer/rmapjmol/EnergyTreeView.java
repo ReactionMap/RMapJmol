@@ -119,7 +119,7 @@ public class EnergyTreeView extends JPanel implements ActionListener {
         double[] energies = new double[lines.size()];
         double base_energy = (double)Double.parseDouble(lines.get(0));
         for (int i = 0; i < energies.length; i++) {
-            energies[i] = ((double)Double.parseDouble(lines.get(i)) - base_energy) * 262.549962;
+            energies[i] = ((double)Double.parseDouble(lines.get(i)) - base_energy) * 2625.49962;
         }
         return energies;
     }
