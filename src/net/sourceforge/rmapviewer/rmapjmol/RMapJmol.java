@@ -242,6 +242,19 @@ public class RMapJmol extends JPanel implements ComponentListener, ActionListene
         this(label, readFile(xyzFile), readFileLines(capFile));
     }
 
+    public RMapJmol(String label, String xyz, String[] cap, double[] energies) {
+        this(label, xyz, cap);
+        JFrame energyFrame = new JFrame(label+" energy");
+        energyFrame.setBounds(500, 0, 1100, 570);
+        JPanel panel = new JPanel();
+        energyFrame.getContentPane().add(panel);
+        panel.setLayout(new BorderLayout());
+        EnergyTreeView treeView = new EnergyTreeView(this, energies);
+        panel.add(treeView.createEnergyTable(), BorderLayout.WEST);
+        panel.add(treeView, BorderLayout.CENTER);
+        energyFrame.setVisible(true);
+    }
+
     public static void main(String[] args) throws IOException {
         String label = args[0];
         String xyzFilename = args[1];
