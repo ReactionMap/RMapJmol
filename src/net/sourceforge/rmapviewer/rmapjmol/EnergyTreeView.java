@@ -58,7 +58,7 @@ public class EnergyTreeView extends JPanel implements ActionListener {
         for (double e = 0.0; e <= max_energy-min_energy; e += magnitude) {
             int y = (int)((max_energy - e - min_energy) * scale_y) + offset_y;
             graphics.drawLine(base_x, y, getWidth()-10, y);
-            String eStr = ""+Math.round(e*10)/10+"."+Math.round(e*10)%10;;
+            String eStr = ""+Math.round((min_energy+e)*10)/10+"."+Math.round(e*10)%10;;
             graphics.drawString(eStr, base_x - fontMetrics.stringWidth(eStr) - 2, y + fontMetrics.getAscent()/2);
         }
         for (int i = 0; i < captionIndices.length; i++) {
@@ -144,7 +144,6 @@ public class EnergyTreeView extends JPanel implements ActionListener {
         saveButton.addActionListener(new ActionListener() {
             public void actionPerformed(ActionEvent event) {
                 try {
-                    String[] ext = {"*.csv", "*"};
                     final FileDialog dialog = new FileDialog(new Frame(),"Save energy table",FileDialog.SAVE);
                     dialog.setVisible(true);
                     final String fullpath = dialog.getDirectory() + dialog.getFile();
