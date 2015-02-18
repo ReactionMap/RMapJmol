@@ -242,17 +242,23 @@ public class RMapJmol extends JPanel implements ComponentListener, ActionListene
         this(label, readFile(xyzFile), readFileLines(capFile));
     }
 
-    public RMapJmol(String label, String xyz, String[] cap, double[] energies) {
+    public RMapJmol(String label, String xyz, String[] cap, double[] hartrees) {
         this(label, xyz, cap);
-        JFrame energyFrame = new JFrame(label+" energy");
-        energyFrame.setBounds(500, 0, 1100, 570);
-        JPanel panel = new JPanel();
-        energyFrame.getContentPane().add(panel);
-        panel.setLayout(new BorderLayout());
-        EnergyTreeView treeView = new EnergyTreeView(this, energies);
-        panel.add(treeView.createEnergyTable(), BorderLayout.WEST);
-        panel.add(treeView, BorderLayout.CENTER);
-        energyFrame.setVisible(true);
+        double energies[] = new double[hartrees.length];
+        for (int i = 0; i < hartrees.length; i++) {
+            energies[i] = (hartrees[i]-hartrees[0]) * 2625.49962;
+        }
+        if (energies.length > 1) {
+            JFrame energyFrame = new JFrame(label + " energy");
+            energyFrame.setBounds(500, 0, 1100, 570);
+            JPanel panel = new JPanel();
+            energyFrame.getContentPane().add(panel);
+            panel.setLayout(new BorderLayout());
+            EnergyTreeView treeView = new EnergyTreeView(this, energies);
+            panel.add(treeView.createEnergyTable(), BorderLayout.WEST);
+            panel.add(treeView, BorderLayout.CENTER);
+            energyFrame.setVisible(true);
+        }
     }
 
     public static void main(String[] args) throws IOException {

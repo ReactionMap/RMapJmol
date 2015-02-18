@@ -55,10 +55,10 @@ public class EnergyTreeView extends JPanel implements ActionListener {
         double magnitude = Math.pow(10.0, Math.floor(Math.log10(max_energy - min_energy)));
         graphics.setColor(Color.BLACK);
         graphics.drawString("kJ/mol", 10, 30);
-        for (double e = 0.0; e <= max_energy-min_energy; e += magnitude) {
-            int y = (int)((max_energy - e - min_energy) * scale_y) + offset_y;
+        for (double e = Math.floor(min_energy / magnitude) * magnitude; e <= max_energy; e += magnitude) {
+            int y = (int)((max_energy - e) * scale_y) + offset_y;
             graphics.drawLine(base_x, y, getWidth()-10, y);
-            String eStr = ""+Math.round((min_energy+e)*10)/10+"."+Math.round(e*10)%10;;
+            String eStr = ""+Math.round(e*10)/10+"."+Math.round(e*10)%10;;
             graphics.drawString(eStr, base_x - fontMetrics.stringWidth(eStr) - 2, y + fontMetrics.getAscent()/2);
         }
         for (int i = 0; i < captionIndices.length; i++) {
@@ -101,7 +101,7 @@ public class EnergyTreeView extends JPanel implements ActionListener {
                 ++number_of_captions;
         }
         this.captionIndices = new int[number_of_captions];
-        System.out.println(number_of_captions);
+        System.out.println("captions: "+number_of_captions);
         number_of_captions = 0;
         for (int i = 0; i < energies.length; i++) {
             if (this.jmol.getCaption(i+1).length() > 0)
