@@ -68,7 +68,7 @@ public class EnergyTreeView extends JPanel implements ActionListener {
             graphics.drawString(caption, x-fontMetrics.stringWidth(caption)/2, base_y + fontMetrics.getHeight()+2);
             if (i > 0) {
                 double e = energies[captionIndices[i]];
-                String eStr = ""+Math.round(e*10)/10+"."+Math.round(e*10)%10;
+                String eStr = (e >= 0.0 ? "" : "-")+Math.round(Math.abs(e)*10)/10+"."+Math.round(Math.abs(e)*10)%10;
                 graphics.drawString(eStr, x-fontMetrics.stringWidth(eStr)/2, (int)((max_energy-e)*scale_y+offset_y)-2);
                 graphics.setColor(Color.LIGHT_GRAY);
                 graphics.drawLine(x, offset_y, x, base_y);
